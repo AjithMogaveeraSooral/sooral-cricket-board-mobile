@@ -76,7 +76,6 @@ const HomeScreen = () => {
 
         const totalRuns = rankedPlayers.reduce((sum, p) => sum + (parseInt(p.total_runs) || 0), 0);
         const totalWickets = rankedPlayers.reduce((sum, p) => sum + (parseInt(p.wickets) || 0), 0);
-        const totalMatches = rankedPlayers.reduce((sum, p) => sum + (parseInt(p.matches) || 0), 0);
         const totalSixes = rankedPlayers.reduce((sum, p) => sum + (parseInt(p.sixes) || 0), 0);
         const totalFours = rankedPlayers.reduce((sum, p) => sum + (parseInt(p.fours) || 0), 0);
 
@@ -94,7 +93,8 @@ const HomeScreen = () => {
         return {
             totalRuns,
             totalWickets,
-            totalMatches: Math.floor(totalMatches / 2),
+            // Use totalMatches from context (calculated from tournaments JSON)
+            totalMatches: contextStats.totalMatches || 0,
             totalSixes,
             totalFours,
             topRunScorer,
@@ -105,7 +105,7 @@ const HomeScreen = () => {
             bowlingRanking,
             allrounderRanking,
         };
-    }, [rankedPlayers, rankings, leaders]);
+    }, [rankedPlayers, rankings, leaders, contextStats]);
 
     if (loading && !stats) {
         return (
