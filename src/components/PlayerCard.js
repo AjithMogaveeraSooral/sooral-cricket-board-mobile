@@ -5,7 +5,16 @@ import { Ionicons } from '@expo/vector-icons';
 import { safeDisplay, parseBestSpell } from '../utils/calculations';
 import colors, { gradients } from '../constants/colors';
 
-const DEFAULT_IMAGE = 'https://raw.githubusercontent.com/AjithMogaveeraSooral/spl-sooral-cricket-board/main/images/default_player.jpg';
+const GITHUB_RAW_BASE = 'https://raw.githubusercontent.com/AjithMogaveeraSooral/spl-sooral-cricket-board/main/';
+const DEFAULT_IMAGE = GITHUB_RAW_BASE + 'images/default_player.jpg';
+
+const getImageUrl = (profileImageUrl) => {
+    if (!profileImageUrl) return DEFAULT_IMAGE;
+    if (profileImageUrl.startsWith('http://') || profileImageUrl.startsWith('https://')) {
+        return profileImageUrl;
+    }
+    return GITHUB_RAW_BASE + profileImageUrl.replace(/\\/g, '/');
+};
 
 const RankBadge = ({ label, rank, color, icon }) => {
     const isTopThree = rank && rank <= 3;
@@ -52,7 +61,7 @@ const StatSection = ({ title, icon, children, gradient }) => (
 );
 
 const PlayerCard = ({ player, index = 0 }) => {
-    const imageUrl = player.profile_image_url || DEFAULT_IMAGE;
+    const imageUrl = getImageUrl(player.profile_image_url);
     const fadeAnim = useRef(new Animated.Value(0)).current;
     const slideAnim = useRef(new Animated.Value(30)).current;
 

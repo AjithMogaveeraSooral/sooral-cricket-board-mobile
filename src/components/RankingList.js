@@ -4,7 +4,16 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import colors, { gradients } from '../constants/colors';
 
-const DEFAULT_IMAGE = 'https://raw.githubusercontent.com/AjithMogaveeraSooral/spl-sooral-cricket-board/main/images/default_player.jpg';
+const GITHUB_RAW_BASE = 'https://raw.githubusercontent.com/AjithMogaveeraSooral/spl-sooral-cricket-board/main/';
+const DEFAULT_IMAGE = GITHUB_RAW_BASE + 'images/default_player.jpg';
+
+const getImageUrl = (profileImageUrl) => {
+    if (!profileImageUrl) return DEFAULT_IMAGE;
+    if (profileImageUrl.startsWith('http://') || profileImageUrl.startsWith('https://')) {
+        return profileImageUrl;
+    }
+    return GITHUB_RAW_BASE + profileImageUrl.replace(/\\/g, '/');
+};
 
 const getMedalStyle = (index) => {
     switch (index) {
@@ -56,7 +65,7 @@ const RankingRow = ({ player, index, type, delay }) => {
         ]).start();
     }, []);
 
-    const imageUrl = player.profile_image_url || DEFAULT_IMAGE;
+    const imageUrl = getImageUrl(player.profile_image_url);
     const medalStyle = getMedalStyle(index);
     const points = type === 'batting' ? player.batting_points :
         type === 'bowling' ? player.bowling_points : player.allrounder_points;

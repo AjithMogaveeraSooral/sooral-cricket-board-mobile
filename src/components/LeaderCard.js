@@ -4,7 +4,18 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import colors, { gradients } from '../constants/colors';
 
-const DEFAULT_IMAGE = 'https://raw.githubusercontent.com/AjithMogaveeraSooral/spl-sooral-cricket-board/main/images/default_player.jpg';
+const GITHUB_RAW_BASE = 'https://raw.githubusercontent.com/AjithMogaveeraSooral/spl-sooral-cricket-board/main/';
+const DEFAULT_IMAGE = GITHUB_RAW_BASE + 'images/default_player.jpg';
+
+const getImageUrl = (profileImageUrl) => {
+    if (!profileImageUrl) return DEFAULT_IMAGE;
+    // If it's already a full URL, return as is
+    if (profileImageUrl.startsWith('http://') || profileImageUrl.startsWith('https://')) {
+        return profileImageUrl;
+    }
+    // Convert relative path to full GitHub raw URL
+    return GITHUB_RAW_BASE + profileImageUrl.replace(/\\/g, '/');
+};
 
 const LeaderCard = ({ title, player, color, delay = 0 }) => {
     const fadeAnim = useRef(new Animated.Value(0)).current;
@@ -58,7 +69,7 @@ const LeaderCard = ({ title, player, color, delay = 0 }) => {
         );
     }
 
-    const imageUrl = player.profile_image_url || DEFAULT_IMAGE;
+    const imageUrl = getImageUrl(player.profile_image_url);
 
     return (
         <Animated.View style={[styles.cardContainer, { opacity: fadeAnim, transform: [{ scale: scaleAnim }] }]}>
