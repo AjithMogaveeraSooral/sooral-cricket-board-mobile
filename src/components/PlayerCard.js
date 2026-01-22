@@ -1,5 +1,5 @@
 import React, { useRef, useEffect } from 'react';
-import { View, Text, Image, StyleSheet, Animated } from 'react-native';
+import { View, Text, Image, StyleSheet, Animated, Easing } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { safeDisplay, parseBestSpell } from '../utils/calculations';
@@ -18,34 +18,63 @@ const getImageUrl = (profileImageUrl) => {
 
 const RankBadge = ({ label, rank, color, icon }) => {
     const isTopThree = rank && rank <= 3;
-    const badgeGradient = rank === 1 ? gradients.gold : 
-                          rank === 2 ? gradients.silver : 
-                          rank === 3 ? gradients.bronze : 
+    const glowAnim = useRef(new Animated.Value(0.4)).current;
+
+    useEffect(() => {
+        if (isTopThree) {
+            Animated.loop(
+                Animated.sequence([
+                    Animated.timing(glowAnim, {
+                        toValue: 0.8,
+                        duration: 1500,
+                        easing: Easing.inOut(Easing.ease),
+                        useNativeDriver: true,
+                    }),
+                    Animated.timing(glowAnim, {
+                        toValue: 0.4,
+                        duration: 1500,
+                        easing: Easing.inOut(Easing.ease),
+                        useNativeDriver: true,
+                    }),
+                ])
+            ).start();
+        }
+    }, [isTopThree]);
+
+    const badgeGradient = rank === 1 ? gradients.goldShine : 
+                          rank === 2 ? gradients.silverShine : 
+                          rank === 3 ? gradients.bronzeShine : 
                           [colors.cardBackgroundLight, colors.cardBackground];
 
     return (
         <View style={styles.rankBadgeContainer}>
             {isTopThree ? (
-                <LinearGradient colors={badgeGradient} style={styles.rankBadge}>
-                    <Ionicons name={icon} size={12} color={color} />
-                    <Text style={[styles.rankValue, { color }]}>
-                        {rank ? `#${rank}` : '—'}
-                    </Text>
-                </LinearGradient>
+                <View style={styles.rankBadgeWrapper}>
+                    <Animated.View style={[styles.rankBadgeGlow, {
+                        backgroundColor: color,
+                        opacity: glowAnim,
+                    }]} />
+                    <LinearGradient colors={badgeGradient} style={styles.rankBadge}>
+                        <Ionicons name={icon} size={13} color={rank <= 2 ? colors.primaryDark : '#fff'} />
+                        <Text style={[styles.rankValue, { color: rank <= 2 ? colors.primaryDark : '#fff' }]}>
+                            #{rank}
+                        </Text>
+                    </LinearGradient>
+                </View>
             ) : (
                 <View style={[styles.rankBadge, styles.rankBadgeInactive]}>
-                    <Ionicons name={icon} size={12} color={colors.textMuted} />
+                    <Ionicons name={icon} size={13} color={colors.textMuted} />
                     <Text style={[styles.rankValue, { color: colors.textSecondary }]}>
                         {rank ? `#${rank}` : '—'}
                     </Text>
                 </View>
             )}
-            <Text style={styles.rankLabel}>{label}</Text>
+            <Text style={[styles.rankLabel, isTopThree && { color }]}>{label}</Text>
         </View>
     );
 };
 
-const StatSection = ({ title, icon, children, gradient }) => (
+const StatSection = ({ title, icon, children, gradient, accentColor }) => (
     <LinearGradient 
         colors={gradient || gradients.card} 
         style={styles.statSection}
@@ -53,30 +82,42 @@ const StatSection = ({ title, icon, children, gradient }) => (
         end={{ x: 1, y: 1 }}
     >
         <View style={styles.statHeader}>
-            <Ionicons name={icon} size={14} color={colors.accent} />
-            <Text style={styles.statTitle}>{title}</Text>
+            <View style={[styles.statIconBg, { backgroundColor: accentColor + '20' }]}>
+                <Ionicons name={icon} size={14} color={accentColor || colors.accent} />
+            </View>
+            <Text style={[styles.statTitle, accentColor && { color: accentColor }]}>{title}</Text>
         </View>
         {children}
+        <View style={styles.statSectionShine} />
     </LinearGradient>
 );
 
 const PlayerCard = ({ player, index = 0 }) => {
     const imageUrl = getImageUrl(player.profile_image_url);
     const fadeAnim = useRef(new Animated.Value(0)).current;
-    const slideAnim = useRef(new Animated.Value(30)).current;
+    const slideAnim = useRef(new Animated.Value(40)).current;
+    const scaleAnim = useRef(new Animated.Value(0.95)).current;
 
     useEffect(() => {
         Animated.parallel([
             Animated.timing(fadeAnim, {
                 toValue: 1,
-                duration: 400,
-                delay: index * 80,
+                duration: 500,
+                delay: index * 100,
                 useNativeDriver: true,
             }),
             Animated.timing(slideAnim, {
                 toValue: 0,
-                duration: 400,
-                delay: index * 80,
+                duration: 500,
+                delay: index * 100,
+                easing: Easing.out(Easing.back(1.1)),
+                useNativeDriver: true,
+            }),
+            Animated.spring(scaleAnim, {
+                toValue: 1,
+                delay: index * 100,
+                tension: 60,
+                friction: 6,
                 useNativeDriver: true,
             }),
         ]).start();
@@ -91,35 +132,60 @@ const PlayerCard = ({ player, index = 0 }) => {
     const bestSpellDisplay = `${best.wickets}-${best.runs}`;
     const overs = player.bowling_overs_calc || "0.0";
 
+    // Determine if player has any top 3 ranks
+    const hasTopRank = (player.batting_rank && player.batting_rank <= 3) ||
+                       (player.bowling_rank && player.bowling_rank <= 3) ||
+                       (player.allrounder_rank && player.allrounder_rank <= 3);
+
     return (
-        <Animated.View style={{ opacity: fadeAnim, transform: [{ translateY: slideAnim }] }}>
-            <LinearGradient colors={gradients.card} style={styles.card}>
+        <Animated.View style={{ 
+            opacity: fadeAnim, 
+            transform: [{ translateY: slideAnim }, { scale: scaleAnim }] 
+        }}>
+            <LinearGradient colors={gradients.cardElevated} style={[
+                styles.card,
+                hasTopRank && styles.cardHighlight,
+            ]}>
+                {/* Background glow for top ranked players */}
+                {hasTopRank && (
+                    <View style={styles.cardGlow} />
+                )}
+
                 {/* Header */}
                 <View style={styles.header}>
                     <View style={styles.imageContainer}>
-                        <Image source={{ uri: imageUrl }} style={styles.image} />
-                        <LinearGradient 
-                            colors={gradients.accent} 
+                        <LinearGradient
+                            colors={gradients.accent}
                             style={styles.imageRing}
                             start={{ x: 0, y: 0 }}
                             end={{ x: 1, y: 1 }}
-                        />
+                        >
+                            <View style={styles.imageInner}>
+                                <Image source={{ uri: imageUrl }} style={styles.image} />
+                            </View>
+                        </LinearGradient>
                     </View>
                     <View style={styles.info}>
                         <Text style={styles.name}>{player.name}</Text>
                         <View style={styles.matchesRow}>
-                            <View style={styles.matchBadge}>
-                                <Ionicons name="baseball-outline" size={12} color={colors.textMuted} />
+                            <LinearGradient
+                                colors={[colors.glassHighlight, colors.glassBackground]}
+                                style={styles.matchBadge}
+                            >
+                                <Ionicons name="baseball-outline" size={12} color={colors.accent} />
                                 <Text style={styles.matchesText}>
                                     {safeDisplay(player.matches)} M
                                 </Text>
-                            </View>
-                            <View style={styles.matchBadge}>
-                                <Ionicons name="stats-chart-outline" size={12} color={colors.textMuted} />
+                            </LinearGradient>
+                            <LinearGradient
+                                colors={[colors.glassHighlight, colors.glassBackground]}
+                                style={styles.matchBadge}
+                            >
+                                <Ionicons name="stats-chart-outline" size={12} color={colors.purple} />
                                 <Text style={styles.matchesText}>
                                     {safeDisplay(player.innings)} Inn
                                 </Text>
-                            </View>
+                            </LinearGradient>
                         </View>
                     </View>
                 </View>
@@ -148,10 +214,17 @@ const PlayerCard = ({ player, index = 0 }) => {
 
                 {/* Stats Grid */}
                 <View style={styles.statsContainer}>
-                    <StatSection title="Batting" icon="baseball" gradient={[colors.gold + '10', colors.gold + '05']}>
+                    <StatSection 
+                        title="Batting" 
+                        icon="baseball" 
+                        gradient={[colors.gold + '12', colors.gold + '05']}
+                        accentColor={colors.gold}
+                    >
                         <View style={styles.statRow}>
                             <Text style={styles.statMainLabel}>Runs</Text>
-                            <Text style={styles.statMainValue}>{safeDisplay(player.total_runs)}</Text>
+                            <Text style={[styles.statMainValue, { color: colors.gold }]}>
+                                {safeDisplay(player.total_runs)}
+                            </Text>
                         </View>
                         <View style={styles.statGrid}>
                             <View style={styles.statItem}>
@@ -173,10 +246,17 @@ const PlayerCard = ({ player, index = 0 }) => {
                         </View>
                     </StatSection>
 
-                    <StatSection title="Bowling" icon="fitness" gradient={[colors.accent + '10', colors.accent + '05']}>
+                    <StatSection 
+                        title="Bowling" 
+                        icon="fitness" 
+                        gradient={[colors.accent + '12', colors.accent + '05']}
+                        accentColor={colors.accent}
+                    >
                         <View style={styles.statRow}>
                             <Text style={styles.statMainLabel}>Wickets</Text>
-                            <Text style={styles.statMainValue}>{safeDisplay(player.wickets)}</Text>
+                            <Text style={[styles.statMainValue, { color: colors.accent }]}>
+                                {safeDisplay(player.wickets)}
+                            </Text>
                         </View>
                         <View style={styles.statGrid}>
                             <View style={styles.statItem}>
@@ -197,19 +277,37 @@ const PlayerCard = ({ player, index = 0 }) => {
 
                 {/* Points Footer */}
                 <View style={styles.pointsContainer}>
-                    <View style={styles.pointItem}>
+                    <LinearGradient
+                        colors={[colors.gold + '20', colors.gold + '08']}
+                        style={styles.pointItem}
+                    >
                         <Ionicons name="baseball" size={14} color={colors.gold} />
-                        <Text style={styles.pointsText}>{safeDisplay(player.batting_points)} pts</Text>
-                    </View>
-                    <View style={styles.pointItem}>
-                        <Ionicons name="fitness" size={14} color={colors.silver} />
-                        <Text style={styles.pointsText}>{safeDisplay(player.bowling_points)} pts</Text>
-                    </View>
-                    <View style={styles.pointItem}>
+                        <Text style={[styles.pointsText, { color: colors.gold }]}>
+                            {safeDisplay(player.batting_points)} pts
+                        </Text>
+                    </LinearGradient>
+                    <LinearGradient
+                        colors={[colors.accent + '20', colors.accent + '08']}
+                        style={styles.pointItem}
+                    >
+                        <Ionicons name="fitness" size={14} color={colors.accent} />
+                        <Text style={[styles.pointsText, { color: colors.accent }]}>
+                            {safeDisplay(player.bowling_points)} pts
+                        </Text>
+                    </LinearGradient>
+                    <LinearGradient
+                        colors={[colors.bronze + '20', colors.bronze + '08']}
+                        style={styles.pointItem}
+                    >
                         <Ionicons name="star" size={14} color={colors.bronze} />
-                        <Text style={styles.pointsText}>{safeDisplay(player.allrounder_points)} pts</Text>
-                    </View>
+                        <Text style={[styles.pointsText, { color: colors.bronze }]}>
+                            {safeDisplay(player.allrounder_points)} pts
+                        </Text>
+                    </LinearGradient>
                 </View>
+
+                {/* Card shine */}
+                <View style={styles.cardShine} />
             </LinearGradient>
         </Animated.View>
     );
@@ -217,11 +315,32 @@ const PlayerCard = ({ player, index = 0 }) => {
 
 const styles = StyleSheet.create({
     card: {
-        padding: 16,
-        borderRadius: 20,
-        marginBottom: 14,
-        borderWidth: 1,
+        padding: 18,
+        borderRadius: 24,
+        marginBottom: 16,
+        borderWidth: 1.5,
         borderColor: colors.border,
+        shadowColor: colors.shadowColor,
+        shadowOffset: { width: 0, height: 6 },
+        shadowOpacity: 0.35,
+        shadowRadius: 12,
+        elevation: 8,
+        position: 'relative',
+        overflow: 'hidden',
+    },
+    cardHighlight: {
+        borderColor: colors.accent + '50',
+    },
+    cardGlow: {
+        position: 'absolute',
+        top: -50,
+        left: '50%',
+        marginLeft: -75,
+        width: 150,
+        height: 100,
+        backgroundColor: colors.accent,
+        opacity: 0.08,
+        borderRadius: 75,
     },
     header: {
         flexDirection: 'row',
@@ -230,30 +349,37 @@ const styles = StyleSheet.create({
     imageContainer: {
         position: 'relative',
     },
-    image: {
-        width: 64,
-        height: 64,
-        borderRadius: 32,
-        zIndex: 1,
-    },
     imageRing: {
-        position: 'absolute',
-        top: -3,
-        left: -3,
-        width: 70,
-        height: 70,
-        borderRadius: 35,
-        opacity: 0.5,
+        width: 72,
+        height: 72,
+        borderRadius: 36,
+        padding: 3,
+        shadowColor: colors.accent,
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.4,
+        shadowRadius: 8,
+        elevation: 6,
+    },
+    imageInner: {
+        flex: 1,
+        borderRadius: 33,
+        overflow: 'hidden',
+        backgroundColor: colors.cardBackgroundDark,
+    },
+    image: {
+        width: '100%',
+        height: '100%',
     },
     info: {
         flex: 1,
-        marginLeft: 14,
+        marginLeft: 16,
     },
     name: {
-        fontSize: 18,
-        fontWeight: '700',
-        color: colors.text,
-        marginBottom: 6,
+        fontSize: 20,
+        fontWeight: '800',
+        color: colors.textPrimary,
+        marginBottom: 8,
+        letterSpacing: 0.3,
     },
     matchesRow: {
         flexDirection: 'row',
@@ -262,95 +388,127 @@ const styles = StyleSheet.create({
     matchBadge: {
         flexDirection: 'row',
         alignItems: 'center',
-        gap: 4,
-        backgroundColor: colors.glassBackground,
-        paddingHorizontal: 8,
-        paddingVertical: 4,
-        borderRadius: 8,
+        gap: 5,
+        paddingHorizontal: 10,
+        paddingVertical: 5,
+        borderRadius: 10,
     },
     matchesText: {
         fontSize: 12,
         color: colors.textSecondary,
-        fontWeight: '500',
+        fontWeight: '600',
     },
     rankBadges: {
         flexDirection: 'row',
         justifyContent: 'space-around',
-        marginTop: 16,
-        paddingTop: 14,
+        marginTop: 18,
+        paddingTop: 16,
         borderTopWidth: 1,
         borderTopColor: colors.borderLight,
     },
     rankBadgeContainer: {
         alignItems: 'center',
     },
+    rankBadgeWrapper: {
+        position: 'relative',
+    },
+    rankBadgeGlow: {
+        position: 'absolute',
+        top: -6,
+        left: -6,
+        right: -6,
+        bottom: -6,
+        borderRadius: 18,
+    },
     rankBadge: {
         flexDirection: 'row',
         alignItems: 'center',
-        paddingHorizontal: 12,
-        paddingVertical: 6,
-        borderRadius: 12,
-        gap: 4,
-        marginBottom: 4,
+        paddingHorizontal: 14,
+        paddingVertical: 7,
+        borderRadius: 14,
+        gap: 5,
+        marginBottom: 6,
     },
     rankBadgeInactive: {
         backgroundColor: colors.glassBackground,
+        borderWidth: 1,
+        borderColor: colors.borderLight,
     },
     rankValue: {
-        fontWeight: '700',
-        fontSize: 13,
+        fontWeight: '800',
+        fontSize: 14,
     },
     rankLabel: {
         fontSize: 10,
         color: colors.textMuted,
-        fontWeight: '500',
+        fontWeight: '600',
         textTransform: 'uppercase',
-        letterSpacing: 0.5,
+        letterSpacing: 0.8,
     },
     statsContainer: {
         flexDirection: 'row',
-        marginTop: 14,
-        gap: 10,
+        marginTop: 16,
+        gap: 12,
     },
     statSection: {
         flex: 1,
-        padding: 12,
-        borderRadius: 14,
+        padding: 14,
+        borderRadius: 16,
         borderWidth: 1,
         borderColor: colors.borderLight,
+        position: 'relative',
+        overflow: 'hidden',
+    },
+    statSectionShine: {
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        height: '40%',
+        backgroundColor: 'rgba(255, 255, 255, 0.02)',
+        borderTopLeftRadius: 16,
+        borderTopRightRadius: 16,
     },
     statHeader: {
         flexDirection: 'row',
         alignItems: 'center',
-        gap: 6,
-        marginBottom: 8,
+        gap: 8,
+        marginBottom: 10,
+    },
+    statIconBg: {
+        width: 26,
+        height: 26,
+        borderRadius: 8,
+        justifyContent: 'center',
+        alignItems: 'center',
     },
     statTitle: {
         fontSize: 12,
         color: colors.textMuted,
-        fontWeight: '600',
+        fontWeight: '700',
         textTransform: 'uppercase',
-        letterSpacing: 0.5,
+        letterSpacing: 0.8,
     },
     statRow: {
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
-        marginBottom: 8,
+        marginBottom: 10,
     },
     statMainLabel: {
         fontSize: 13,
         color: colors.textSecondary,
+        fontWeight: '500',
     },
     statMainValue: {
-        fontSize: 20,
-        fontWeight: '800',
-        color: colors.text,
+        fontSize: 24,
+        fontWeight: '900',
+        color: colors.textPrimary,
     },
     statGrid: {
         flexDirection: 'row',
         justifyContent: 'space-between',
-        marginBottom: 6,
+        marginBottom: 8,
     },
     statItem: {
         alignItems: 'center',
@@ -358,11 +516,13 @@ const styles = StyleSheet.create({
     statItemLabel: {
         fontSize: 10,
         color: colors.textMuted,
-        marginBottom: 2,
+        marginBottom: 3,
+        fontWeight: '500',
+        letterSpacing: 0.5,
     },
     statItemValue: {
-        fontSize: 13,
-        fontWeight: '600',
+        fontSize: 14,
+        fontWeight: '700',
         color: colors.textSecondary,
     },
     statSecondaryRow: {
@@ -372,12 +532,13 @@ const styles = StyleSheet.create({
     statSecondary: {
         fontSize: 11,
         color: colors.textMuted,
+        fontWeight: '500',
     },
     pointsContainer: {
         flexDirection: 'row',
         justifyContent: 'space-around',
-        marginTop: 14,
-        paddingTop: 12,
+        marginTop: 16,
+        paddingTop: 14,
         borderTopWidth: 1,
         borderTopColor: colors.borderLight,
     },
@@ -385,11 +546,23 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         gap: 6,
+        paddingHorizontal: 12,
+        paddingVertical: 6,
+        borderRadius: 10,
     },
     pointsText: {
-        fontSize: 12,
-        color: colors.textSecondary,
-        fontWeight: '500',
+        fontSize: 13,
+        fontWeight: '700',
+    },
+    cardShine: {
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        height: '25%',
+        backgroundColor: 'rgba(255, 255, 255, 0.015)',
+        borderTopLeftRadius: 24,
+        borderTopRightRadius: 24,
     },
 });
 

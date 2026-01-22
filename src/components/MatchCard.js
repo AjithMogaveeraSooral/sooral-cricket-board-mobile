@@ -1,18 +1,19 @@
 import React, { useEffect, useRef } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Animated } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Animated, Easing } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import colors, { gradients } from '../constants/colors';
 
 const MatchCard = ({ match, onPress, delay = 0 }) => {
     const fadeAnim = useRef(new Animated.Value(0)).current;
-    const scaleAnim = useRef(new Animated.Value(0.95)).current;
+    const scaleAnim = useRef(new Animated.Value(0.92)).current;
+    const slideAnim = useRef(new Animated.Value(30)).current;
 
     useEffect(() => {
         Animated.parallel([
             Animated.timing(fadeAnim, {
                 toValue: 1,
-                duration: 400,
+                duration: 500,
                 delay,
                 useNativeDriver: true,
             }),
@@ -20,8 +21,15 @@ const MatchCard = ({ match, onPress, delay = 0 }) => {
                 toValue: 1,
                 delay,
                 useNativeDriver: true,
-                tension: 80,
-                friction: 10,
+                tension: 60,
+                friction: 6,
+            }),
+            Animated.timing(slideAnim, {
+                toValue: 0,
+                duration: 500,
+                delay,
+                easing: Easing.out(Easing.ease),
+                useNativeDriver: true,
             }),
         ]).start();
     }, []);
@@ -33,10 +41,13 @@ const MatchCard = ({ match, onPress, delay = 0 }) => {
     const isTeam2Winner = match.winner === team2Name;
 
     return (
-        <Animated.View style={{ opacity: fadeAnim, transform: [{ scale: scaleAnim }] }}>
+        <Animated.View style={{ 
+            opacity: fadeAnim, 
+            transform: [{ scale: scaleAnim }, { translateY: slideAnim }] 
+        }}>
             <TouchableOpacity onPress={onPress} activeOpacity={0.85}>
                 <LinearGradient
-                    colors={gradients.card}
+                    colors={gradients.cardElevated}
                     style={styles.card}
                     start={{ x: 0, y: 0 }}
                     end={{ x: 1, y: 1 }}
@@ -118,126 +129,142 @@ const MatchCard = ({ match, onPress, delay = 0 }) => {
 
 const styles = StyleSheet.create({
     card: {
-        padding: 16,
-        borderRadius: 16,
-        borderWidth: 1,
+        padding: 18,
+        borderRadius: 20,
+        borderWidth: 1.5,
         borderColor: colors.border,
-        marginBottom: 14,
+        marginBottom: 16,
         shadowColor: colors.shadowColor,
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.3,
-        shadowRadius: 8,
-        elevation: 6,
+        shadowOffset: { width: 0, height: 6 },
+        shadowOpacity: 0.35,
+        shadowRadius: 12,
+        elevation: 8,
+        position: 'relative',
+        overflow: 'hidden',
     },
     header: {
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
-        marginBottom: 14,
+        marginBottom: 16,
     },
     matchIdBadge: {
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: colors.accent + '15',
-        paddingHorizontal: 10,
-        paddingVertical: 5,
-        borderRadius: 8,
+        backgroundColor: colors.accent + '20',
+        paddingHorizontal: 12,
+        paddingVertical: 6,
+        borderRadius: 10,
         gap: 6,
     },
     matchNumber: {
         fontSize: 12,
-        fontWeight: '700',
+        fontWeight: '800',
         color: colors.accent,
+        letterSpacing: 0.3,
     },
     tapHint: {
         flexDirection: 'row',
         alignItems: 'center',
+        backgroundColor: colors.glassBackground,
+        paddingHorizontal: 10,
+        paddingVertical: 5,
+        borderRadius: 8,
     },
     tapHintText: {
         fontSize: 11,
         color: colors.textMuted,
-        marginRight: 2,
+        marginRight: 4,
+        fontWeight: '500',
     },
     teamsContainer: {
-        marginBottom: 14,
+        marginBottom: 16,
     },
     teamRow: {
-        paddingVertical: 8,
-        paddingHorizontal: 12,
-        borderRadius: 10,
+        paddingVertical: 10,
+        paddingHorizontal: 14,
+        borderRadius: 12,
     },
     winnerRow: {
-        backgroundColor: colors.gold + '10',
+        backgroundColor: colors.gold + '15',
+        borderWidth: 1,
+        borderColor: colors.gold + '30',
     },
     teamNameContainer: {
         flexDirection: 'row',
         alignItems: 'center',
     },
     winnerIcon: {
-        marginRight: 8,
+        marginRight: 10,
     },
     teamName: {
-        fontSize: 16,
+        fontSize: 17,
         fontWeight: '600',
-        color: colors.text,
+        color: colors.textPrimary,
+        letterSpacing: 0.3,
     },
     winnerName: {
         color: colors.gold,
-        fontWeight: '700',
+        fontWeight: '800',
     },
     vsContainer: {
         flexDirection: 'row',
         alignItems: 'center',
-        marginVertical: 6,
+        marginVertical: 8,
     },
     vsLine: {
         flex: 1,
-        height: 1,
+        height: 1.5,
         backgroundColor: colors.borderLight,
     },
     vsBadge: {
         backgroundColor: colors.cardBackgroundLight,
-        paddingHorizontal: 12,
-        paddingVertical: 4,
-        borderRadius: 10,
-        marginHorizontal: 10,
+        paddingHorizontal: 14,
+        paddingVertical: 5,
+        borderRadius: 12,
+        marginHorizontal: 12,
+        borderWidth: 1,
+        borderColor: colors.borderLight,
     },
     vs: {
         fontSize: 11,
-        fontWeight: '700',
+        fontWeight: '800',
         color: colors.textMuted,
-        letterSpacing: 1,
+        letterSpacing: 1.5,
     },
     resultContainer: {
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'center',
-        padding: 10,
-        borderRadius: 10,
-        gap: 8,
-        marginBottom: 10,
+        padding: 12,
+        borderRadius: 12,
+        gap: 10,
+        marginBottom: 12,
     },
     result: {
-        fontSize: 13,
+        fontSize: 14,
         color: colors.accent,
-        fontWeight: '600',
+        fontWeight: '700',
+        letterSpacing: 0.3,
     },
     potmContainer: {
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: colors.gold + '10',
-        padding: 10,
-        borderRadius: 10,
-        marginBottom: 10,
+        backgroundColor: colors.gold + '12',
+        padding: 12,
+        borderRadius: 14,
+        marginBottom: 12,
+        borderWidth: 1,
+        borderColor: colors.gold + '25',
     },
     potmBadge: {
-        width: 28,
-        height: 28,
-        borderRadius: 14,
-        backgroundColor: colors.gold + '20',
+        width: 32,
+        height: 32,
+        borderRadius: 16,
+        backgroundColor: colors.gold + '25',
         justifyContent: 'center',
         alignItems: 'center',
-        marginRight: 10,
+        marginRight: 12,
     },
     potmTextContainer: {
         flex: 1,
@@ -245,21 +272,23 @@ const styles = StyleSheet.create({
     potmLabel: {
         fontSize: 10,
         color: colors.textMuted,
-        fontWeight: '500',
+        fontWeight: '600',
         textTransform: 'uppercase',
-        letterSpacing: 0.5,
+        letterSpacing: 0.8,
     },
     potmName: {
-        fontSize: 13,
-        fontWeight: '600',
+        fontSize: 14,
+        fontWeight: '700',
         color: colors.gold,
-        marginTop: 2,
+        marginTop: 3,
+        letterSpacing: 0.3,
     },
     summary: {
         fontSize: 12,
         color: colors.textSecondary,
         textAlign: 'center',
         fontStyle: 'italic',
+        lineHeight: 18,
     },
 });
 

@@ -1,6 +1,7 @@
 ﻿import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet, Platform } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
+import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
@@ -13,30 +14,34 @@ import colors, { gradients } from './src/constants/colors';
 
 const Tab = createBottomTabNavigator();
 
-// Custom header component
-const CustomHeader = ({ title, icon }) => (
-  <LinearGradient
-    colors={gradients.header}
-    style={styles.headerGradient}
-    start={{ x: 0, y: 0 }}
-    end={{ x: 1, y: 1 }}
-  >
-    <View style={styles.headerContent}>
-      <View style={styles.headerLeft}>
-        <View style={styles.logoContainer}>
-          <Text style={styles.logoText}>SPL</Text>
+// Custom header component with safe area support
+const CustomHeader = ({ title, icon }) => {
+  const insets = useSafeAreaInsets();
+  
+  return (
+    <LinearGradient
+      colors={gradients.header}
+      style={[styles.headerGradient, { paddingTop: insets.top + 12 }]}
+      start={{ x: 0, y: 0 }}
+      end={{ x: 1, y: 1 }}
+    >
+      <View style={styles.headerContent}>
+        <View style={styles.headerLeft}>
+          <View style={styles.logoContainer}>
+            <Text style={styles.logoText}>SPL</Text>
+          </View>
+          <View style={styles.titleContainer}>
+            <Text style={styles.headerTitle}>{title}</Text>
+            <Text style={styles.headerSubtitle}>Sooral Premier League</Text>
+          </View>
         </View>
-        <View style={styles.titleContainer}>
-          <Text style={styles.headerTitle}>{title}</Text>
-          <Text style={styles.headerSubtitle}>Sooral Premier League</Text>
+        <View style={styles.headerIconContainer}>
+          <Ionicons name={icon} size={24} color={colors.accent} />
         </View>
       </View>
-      <View style={styles.headerIconContainer}>
-        <Ionicons name={icon} size={24} color={colors.accent} />
-      </View>
-    </View>
-  </LinearGradient>
-);
+    </LinearGradient>
+  );
+};
 
 // Custom tab bar icon with animation effect
 const TabIcon = ({ focused, iconName, color }) => (
@@ -48,78 +53,74 @@ const TabIcon = ({ focused, iconName, color }) => (
 
 export default function App() {
   return (
-    <SPLProvider>
-      <NavigationContainer>
-        <StatusBar style="light" />
-        <Tab.Navigator
-          screenOptions={({ route }) => ({
-            tabBarIcon: ({ focused, color }) => {
-              let iconName;
-              if (route.name === 'Home') {
-                iconName = focused ? 'home' : 'home-outline';
-              } else if (route.name === 'Tournaments') {
-                iconName = focused ? 'trophy' : 'trophy-outline';
-              } else if (route.name === 'Player Stats') {
-                iconName = focused ? 'people' : 'people-outline';
-              }
-              return <TabIcon focused={focused} iconName={iconName} color={color} />;
-            },
-            tabBarActiveTintColor: colors.accent,
-            tabBarInactiveTintColor: colors.textMuted,
-            tabBarStyle: {
-              backgroundColor: colors.cardBackground,
-              borderTopWidth: 1,
-              borderTopColor: colors.border,
-              paddingBottom: 8,
-              paddingTop: 8,
-              height: 70,
-              shadowColor: colors.accent,
-              shadowOffset: { width: 0, height: -4 },
-              shadowOpacity: 0.1,
-              shadowRadius: 8,
-              elevation: 10,
-            },
-            tabBarLabelStyle: {
-              fontSize: 11,
-              fontWeight: '600',
-              marginTop: 4,
-            },
-            headerShown: false,
-          })}
-        >
-          <Tab.Screen 
-            name="Home" 
-            component={HomeScreen}
-            options={{ 
-              title: 'Home',
-              header: () => <CustomHeader title="Home" icon="home" />,
-            }}
-          />
-          <Tab.Screen 
-            name="Tournaments" 
-            component={TournamentsScreen}
-            options={{ 
-              title: 'Tournaments',
-              header: () => <CustomHeader title="Tournaments" icon="trophy" />,
-            }}
-          />
-          <Tab.Screen 
-            name="Player Stats" 
-            component={PlayerStatsScreen}
-            options={{ 
-              title: 'Players',
-              header: () => <CustomHeader title="Players" icon="people" />,
-            }}
-          />
-        </Tab.Navigator>
-      </NavigationContainer>
-    </SPLProvider>
+    <SafeAreaProvider>
+      <SPLProvider>
+        <NavigationContainer>
+          <StatusBar style="light" />
+          <Tab.Navigator
+            screenOptions={({ route }) => ({
+              tabBarIcon: ({ focused, color }) => {
+                let iconName;
+                if (route.name === 'Home') {
+                  iconName = focused ? 'home' : 'home-outline';
+                } else if (route.name === 'Tournaments') {
+                  iconName = focused ? 'trophy' : 'trophy-outline';
+                } else if (route.name === 'Player Stats') {
+                  iconName = focused ? 'people' : 'people-outline';
+                }
+                return <TabIcon focused={focused} iconName={iconName} color={color} />;
+              },
+              tabBarActiveTintColor: colors.accent,
+              tabBarInactiveTintColor: colors.textMuted,
+              tabBarStyle: {
+                backgroundColor: colors.cardBackground,
+                borderTopWidth: 1,
+                borderTopColor: colors.border,
+                paddingBottom: Platform.OS === 'ios' ? 24 : 8,
+                paddingTop: 8,
+                height: Platform.OS === 'ios' ? 85 : 70,
+                shadowColor: colors.accent,
+                shadowOffset: { width: 0, height: -4 },
+                shadowOpacity: 0.1,
+                shadowRadius: 8,
+                elevation: 10,
+              },
+              tabBarLabelStyle: {
+                fontSize: 11,
+                fontWeight: '600',
+                marginTop: 4,
+              },
+              headerShown: true,
+              header: () => {
+                let icon;
+                if (route.name === 'Home') icon = 'home';
+                else if (route.name === 'Tournaments') icon = 'trophy';
+                else if (route.name === 'Player Stats') icon = 'people';
+                return <CustomHeader title={route.name === 'Player Stats' ? 'Players' : route.name} icon={icon} />;
+              },
+            })}
+          >
+            <Tab.Screen 
+              name="Home" 
+              component={HomeScreen}
+            />
+            <Tab.Screen 
+              name="Tournaments" 
+              component={TournamentsScreen}
+            />
+            <Tab.Screen 
+              name="Player Stats" 
+              component={PlayerStatsScreen}
+            />
+          </Tab.Navigator>
+        </NavigationContainer>
+      </SPLProvider>
+    </SafeAreaProvider>
   );
 }
 
 const styles = StyleSheet.create({
   headerGradient: {
-    paddingTop: 50,
     paddingBottom: 16,
     paddingHorizontal: 20,
     borderBottomWidth: 1,

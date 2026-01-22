@@ -1,10 +1,10 @@
 {
   "expo": {
-    "name": "sooral-cricket-board-mobile",
+    "name": "Sooral Cricket Board",
     "slug": "sooral-cricket-board-mobile",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/icon.png",
+    "icon": "./assets/icon.jpg",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
     "splash": {
@@ -20,10 +20,16 @@
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "edgeToEdgeEnabled": true
+      "edgeToEdgeEnabled": true,
+      "package": "com.ajithms98.sooralcricketboardmobile"
     },
     "web": {
       "favicon": "./assets/favicon.png"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "6afedf5f-b2de-4ce1-bf65-b24984b732a9"
+      }
     }
   }
 }

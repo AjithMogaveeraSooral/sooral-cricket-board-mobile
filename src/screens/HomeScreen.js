@@ -1,5 +1,5 @@
 import React, { useMemo, useEffect, useRef } from 'react';
-import { View, Text, ScrollView, RefreshControl, StyleSheet, ActivityIndicator, Animated } from 'react-native';
+import { View, Text, ScrollView, RefreshControl, StyleSheet, ActivityIndicator, Animated, Easing, Dimensions } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { useSPL } from '../contexts/SPLContext';
@@ -8,15 +8,62 @@ import Rank1Card from '../components/Rank1Card';
 import RankingList from '../components/RankingList';
 import colors, { gradients } from '../constants/colors';
 
-const AnimatedStatBox = ({ value, label, icon, delay, color }) => {
+const { width } = Dimensions.get('window');
+
+// Shimmer effect component for loading states
+const ShimmerEffect = ({ style }) => {
+    const shimmerAnim = useRef(new Animated.Value(0)).current;
+
+    useEffect(() => {
+        Animated.loop(
+            Animated.timing(shimmerAnim, {
+                toValue: 1,
+                duration: 1500,
+                easing: Easing.linear,
+                useNativeDriver: true,
+            })
+        ).start();
+    }, []);
+
+    const translateX = shimmerAnim.interpolate({
+        inputRange: [0, 1],
+        outputRange: [-width, width],
+    });
+
+    return (
+        <Animated.View
+            style={[
+                style,
+                {
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    transform: [{ translateX }],
+                },
+            ]}
+        >
+            <LinearGradient
+                colors={gradients.shimmer}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                style={{ flex: 1 }}
+            />
+        </Animated.View>
+    );
+};
+
+const AnimatedStatBox = ({ value, label, icon, delay, color, gradientColors }) => {
     const fadeAnim = useRef(new Animated.Value(0)).current;
     const scaleAnim = useRef(new Animated.Value(0.8)).current;
+    const glowAnim = useRef(new Animated.Value(0.5)).current;
 
     useEffect(() => {
         Animated.parallel([
             Animated.timing(fadeAnim, {
                 toValue: 1,
-                duration: 500,
+                duration: 600,
                 delay,
                 useNativeDriver: true,
             }),
@@ -24,39 +71,98 @@ const AnimatedStatBox = ({ value, label, icon, delay, color }) => {
                 toValue: 1,
                 delay,
                 useNativeDriver: true,
-                tension: 100,
-                friction: 8,
+                tension: 80,
+                friction: 6,
             }),
         ]).start();
+
+        // Subtle glow pulse
+        Animated.loop(
+            Animated.sequence([
+                Animated.timing(glowAnim, {
+                    toValue: 0.8,
+                    duration: 2000,
+                    easing: Easing.inOut(Easing.ease),
+                    useNativeDriver: true,
+                }),
+                Animated.timing(glowAnim, {
+                    toValue: 0.5,
+                    duration: 2000,
+                    easing: Easing.inOut(Easing.ease),
+                    useNativeDriver: true,
+                }),
+            ])
+        ).start();
     }, []);
 
     return (
         <Animated.View style={[styles.statBox, { opacity: fadeAnim, transform: [{ scale: scaleAnim }] }]}>
             <LinearGradient
-                colors={gradients.card}
+                colors={gradientColors || gradients.card}
                 style={styles.statBoxGradient}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 1 }}
             >
-                <View style={[styles.statIconContainer, { backgroundColor: color + '20' }]}>
-                    <Ionicons name={icon} size={20} color={color} />
+                {/* Glow effect */}
+                <Animated.View style={[styles.statGlowEffect, { 
+                    backgroundColor: color,
+                    opacity: glowAnim,
+                }]} />
+                
+                <View style={[styles.statIconContainer, { backgroundColor: color + '25' }]}>
+                    <LinearGradient
+                        colors={[color + '40', 'transparent']}
+                        style={styles.iconGlow}
+                    />
+                    <Ionicons name={icon} size={22} color={color} />
                 </View>
-                <Text style={[styles.statValue, { color }]}>{value}</Text>
+                <Text style={[styles.statValue, { color }]}>{value.toLocaleString()}</Text>
                 <Text style={styles.statLabel}>{label}</Text>
+                
+                {/* Shine overlay */}
+                <View style={styles.statShine} />
             </LinearGradient>
         </Animated.View>
     );
 };
 
-const SectionHeader = ({ title, icon }) => (
-    <View style={styles.sectionHeader}>
-        <View style={styles.sectionIconContainer}>
-            <Ionicons name={icon} size={18} color={colors.accent} />
+const SectionHeader = ({ title, icon, accentColor }) => {
+    const lineAnim = useRef(new Animated.Value(0)).current;
+
+    useEffect(() => {
+        Animated.timing(lineAnim, {
+            toValue: 1,
+            duration: 800,
+            delay: 200,
+            easing: Easing.out(Easing.ease),
+            useNativeDriver: false,
+        }).start();
+    }, []);
+
+    const lineWidth = lineAnim.interpolate({
+        inputRange: [0, 1],
+        outputRange: ['0%', '100%'],
+    });
+
+    return (
+        <View style={styles.sectionHeader}>
+            <View style={[styles.sectionIconContainer, accentColor && { borderColor: accentColor + '40' }]}>
+                <Ionicons name={icon} size={18} color={accentColor || colors.accent} />
+            </View>
+            <Text style={styles.sectionTitle}>{title}</Text>
+            <View style={styles.sectionLineContainer}>
+                <Animated.View style={[styles.sectionLine, { width: lineWidth }]}>
+                    <LinearGradient
+                        colors={[accentColor || colors.accent, 'transparent']}
+                        start={{ x: 0, y: 0 }}
+                        end={{ x: 1, y: 0 }}
+                        style={styles.sectionLineGradient}
+                    />
+                </Animated.View>
+            </View>
         </View>
-        <Text style={styles.sectionTitle}>{title}</Text>
-        <View style={styles.sectionLine} />
-    </View>
-);
+    );
+};
 
 const HomeScreen = () => {
     // Use rankedPlayers (with calculated points) and rankings from context
@@ -179,6 +285,7 @@ const HomeScreen = () => {
                         icon="calendar"
                         delay={100}
                         color={colors.cyan}
+                        gradientColors={gradients.cyan}
                     />
                     <AnimatedStatBox 
                         value={stats?.totalRuns || 0} 
@@ -186,6 +293,7 @@ const HomeScreen = () => {
                         icon="analytics"
                         delay={200}
                         color={colors.accent}
+                        gradientColors={gradients.emerald}
                     />
                     <AnimatedStatBox 
                         value={stats?.totalWickets || 0} 
@@ -193,6 +301,7 @@ const HomeScreen = () => {
                         icon="baseball"
                         delay={300}
                         color={colors.purple}
+                        gradientColors={gradients.purple}
                     />
                     <AnimatedStatBox 
                         value={stats?.totalSixes || 0} 
@@ -200,11 +309,12 @@ const HomeScreen = () => {
                         icon="rocket"
                         delay={400}
                         color={colors.orange}
+                        gradientColors={gradients.orange}
                     />
                 </View>
 
                 {/* League Leaders */}
-                <SectionHeader title="League Leaders" icon="star" />
+                <SectionHeader title="League Leaders" icon="star" accentColor={colors.gold} />
                 <View style={styles.leadersGrid}>
                     <LeaderCard title="Most Runs" player={stats?.topRunScorer} color={colors.gold} delay={100} />
                     <LeaderCard title="Most Wickets" player={stats?.topWicketTaker} color={colors.silver} delay={200} />
@@ -213,7 +323,7 @@ const HomeScreen = () => {
                 </View>
 
                 {/* #1 Ranked Players */}
-                <SectionHeader title="#1 Ranked Players" icon="medal" />
+                <SectionHeader title="#1 Ranked Players" icon="medal" accentColor={colors.accent} />
                 <View style={styles.rank1Grid}>
                     <Rank1Card title="Batting" player={stats?.battingRanking?.[0]} color={colors.gold} />
                     <Rank1Card title="Bowling" player={stats?.bowlingRanking?.[0]} color={colors.silver} />
@@ -221,7 +331,7 @@ const HomeScreen = () => {
                 </View>
 
                 {/* Top 5 Rankings */}
-                <SectionHeader title="Top 5 Rankings" icon="podium" />
+                <SectionHeader title="Top 5 Rankings" icon="podium" accentColor={colors.purple} />
                 <RankingList title="Batting Rankings" players={stats?.battingRanking} type="batting" color={colors.gold} />
                 <RankingList title="Bowling Rankings" players={stats?.bowlingRanking} type="bowling" color={colors.silver} />
                 <RankingList title="Allrounder Rankings" players={stats?.allrounderRanking} type="allrounder" color={colors.bronze} />
@@ -246,149 +356,199 @@ const styles = StyleSheet.create({
     },
     loaderContainer: {
         alignItems: 'center',
+        padding: 40,
+        borderRadius: 24,
+        backgroundColor: colors.glassBackground,
     },
     loadingText: {
         marginTop: 16,
-        color: colors.text,
+        color: colors.textPrimary,
         fontSize: 16,
-        fontWeight: '500',
+        fontWeight: '600',
+        letterSpacing: 0.5,
     },
     errorText: {
         color: colors.error,
-        fontSize: 14,
-        marginTop: 12,
+        fontSize: 15,
+        marginTop: 14,
+        textAlign: 'center',
     },
     heroHeader: {
-        marginBottom: 20,
-        borderRadius: 20,
+        marginBottom: 24,
+        borderRadius: 24,
         overflow: 'hidden',
     },
     heroGradient: {
-        borderRadius: 20,
-        borderWidth: 1,
+        borderRadius: 24,
+        borderWidth: 1.5,
         borderColor: colors.border,
     },
     heroContent: {
         alignItems: 'center',
-        paddingVertical: 24,
-        paddingHorizontal: 20,
+        paddingVertical: 28,
+        paddingHorizontal: 24,
     },
     heroLogoContainer: {
-        marginBottom: 12,
+        marginBottom: 14,
         shadowColor: colors.accent,
-        shadowOffset: { width: 0, height: 8 },
-        shadowOpacity: 0.5,
-        shadowRadius: 16,
-        elevation: 12,
+        shadowOffset: { width: 0, height: 12 },
+        shadowOpacity: 0.6,
+        shadowRadius: 20,
+        elevation: 16,
     },
     heroLogo: {
-        width: 80,
-        height: 80,
-        borderRadius: 20,
+        width: 88,
+        height: 88,
+        borderRadius: 22,
         justifyContent: 'center',
         alignItems: 'center',
     },
     heroLogoText: {
-        fontSize: 28,
+        fontSize: 30,
         fontWeight: '900',
         color: colors.primaryDark,
+        letterSpacing: 1,
     },
     heroTitle: {
-        fontSize: 24,
-        fontWeight: '700',
-        color: colors.text,
-        letterSpacing: 1,
+        fontSize: 26,
+        fontWeight: '800',
+        color: colors.textPrimary,
+        letterSpacing: 1.5,
         textAlign: 'center',
     },
     heroSubtitle: {
-        fontSize: 14,
+        fontSize: 15,
         color: colors.textAccent,
-        marginTop: 8,
-        fontWeight: '600',
+        marginTop: 10,
+        fontWeight: '700',
+        letterSpacing: 0.5,
     },
     heroBorder: {
-        height: 3,
-        backgroundColor: colors.accent,
+        height: 4,
         borderRadius: 2,
+        overflow: 'hidden',
     },
     statsGrid: {
         flexDirection: 'row',
         flexWrap: 'wrap',
         justifyContent: 'space-between',
-        marginBottom: 24,
+        marginBottom: 28,
     },
     statBox: {
         width: '48%',
-        marginBottom: 12,
-        borderRadius: 16,
+        marginBottom: 14,
+        borderRadius: 20,
         overflow: 'hidden',
     },
     statBoxGradient: {
-        padding: 16,
+        padding: 18,
         alignItems: 'center',
-        borderRadius: 16,
-        borderWidth: 1,
+        borderRadius: 20,
+        borderWidth: 1.5,
         borderColor: colors.borderLight,
+        position: 'relative',
+        overflow: 'hidden',
+    },
+    statGlowEffect: {
+        position: 'absolute',
+        top: -30,
+        left: '50%',
+        width: 60,
+        height: 60,
+        borderRadius: 30,
+        marginLeft: -30,
     },
     statIconContainer: {
-        width: 40,
-        height: 40,
-        borderRadius: 12,
+        width: 48,
+        height: 48,
+        borderRadius: 14,
         justifyContent: 'center',
         alignItems: 'center',
-        marginBottom: 8,
+        marginBottom: 12,
+        position: 'relative',
+        overflow: 'hidden',
+    },
+    iconGlow: {
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        borderRadius: 14,
     },
     statValue: {
-        fontSize: 28,
+        fontSize: 32,
         fontWeight: '800',
+        letterSpacing: 0.5,
     },
     statLabel: {
         fontSize: 12,
         color: colors.textSecondary,
-        marginTop: 4,
-        fontWeight: '500',
+        marginTop: 6,
+        fontWeight: '600',
+        letterSpacing: 0.5,
+        textTransform: 'uppercase',
+    },
+    statShine: {
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        height: '50%',
+        backgroundColor: 'rgba(255, 255, 255, 0.02)',
+        borderTopLeftRadius: 20,
+        borderTopRightRadius: 20,
     },
     sectionHeader: {
         flexDirection: 'row',
         alignItems: 'center',
-        marginBottom: 16,
-        marginTop: 8,
+        marginBottom: 18,
+        marginTop: 10,
     },
     sectionIconContainer: {
-        width: 32,
-        height: 32,
-        borderRadius: 10,
+        width: 36,
+        height: 36,
+        borderRadius: 12,
         backgroundColor: colors.glassBackground,
         justifyContent: 'center',
         alignItems: 'center',
-        marginRight: 10,
-        borderWidth: 1,
+        marginRight: 12,
+        borderWidth: 1.5,
         borderColor: colors.border,
     },
     sectionTitle: {
-        fontSize: 18,
-        fontWeight: '700',
-        color: colors.text,
-        letterSpacing: 0.5,
+        fontSize: 20,
+        fontWeight: '800',
+        color: colors.textPrimary,
+        letterSpacing: 0.8,
+    },
+    sectionLineContainer: {
+        flex: 1,
+        height: 2,
+        marginLeft: 14,
+        borderRadius: 1,
+        backgroundColor: colors.borderLight,
+        overflow: 'hidden',
     },
     sectionLine: {
+        height: '100%',
+    },
+    sectionLineGradient: {
         flex: 1,
-        height: 1,
-        backgroundColor: colors.borderLight,
-        marginLeft: 12,
+        height: '100%',
     },
     leadersGrid: {
         flexDirection: 'row',
         flexWrap: 'wrap',
         justifyContent: 'space-between',
-        marginBottom: 16,
+        marginBottom: 20,
     },
     rank1Grid: {
         flexDirection: 'row',
-        marginBottom: 16,
+        marginBottom: 20,
     },
     bottomPadding: {
-        height: 30,
+        height: 40,
     },
 });
 
