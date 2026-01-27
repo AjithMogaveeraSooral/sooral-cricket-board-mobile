@@ -14,7 +14,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import colors, { gradients } from '../constants/colors';
 
 // Replace with your actual Play Store package name
-const PLAY_STORE_URL = 'https://play.google.com/store/apps/details?id=com.sooralcricketboard.spl';
+const PLAY_STORE_URL = 'https://play.google.com/store/apps/details?id=com.ajithms98.sooralcricketboardmobile';
 const APP_STORE_URL = 'https://apps.apple.com/app/idYOUR_APP_ID'; // Replace with your App Store ID if needed
 
 const ForceUpdateModal = ({ visible, currentVersion, latestVersion }) => {
