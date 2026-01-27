@@ -1,5 +1,5 @@
-﻿import React from 'react';
-import { View, Text, StyleSheet, Platform } from 'react-native';
+﻿import React, { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, AppState } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { NavigationContainer } from '@react-navigation/native';
@@ -10,6 +10,8 @@ import { SPLProvider } from './src/contexts/SPLContext';
 import HomeScreen from './src/screens/HomeScreen';
 import TournamentsScreen from './src/screens/TournamentsScreen';
 import PlayerStatsScreen from './src/screens/PlayerStatsScreen';
+import ForceUpdateModal from './src/components/ForceUpdateModal';
+import { checkForUpdate } from './src/services/versionCheck';
 import colors, { gradients } from './src/constants/colors';
 
 const Tab = createBottomTabNavigator();
@@ -51,68 +53,113 @@ const TabIcon = ({ focused, iconName, color }) => (
   </View>
 );
 
+// Main navigator component that uses safe area insets for bottom tabs
+const MainNavigator = () => {
+  const insets = useSafeAreaInsets();
+  
+  return (
+    <Tab.Navigator
+      screenOptions={({ route }) => ({
+        tabBarIcon: ({ focused, color }) => {
+          let iconName;
+          if (route.name === 'Home') {
+            iconName = focused ? 'home' : 'home-outline';
+          } else if (route.name === 'Tournaments') {
+            iconName = focused ? 'trophy' : 'trophy-outline';
+          } else if (route.name === 'Player Stats') {
+            iconName = focused ? 'people' : 'people-outline';
+          }
+          return <TabIcon focused={focused} iconName={iconName} color={color} />;
+        },
+        tabBarActiveTintColor: colors.accent,
+        tabBarInactiveTintColor: colors.textMuted,
+        tabBarStyle: {
+          backgroundColor: colors.cardBackground,
+          borderTopWidth: 1,
+          borderTopColor: colors.border,
+          paddingBottom: Math.max(insets.bottom, 8),
+          paddingTop: 8,
+          height: 60 + Math.max(insets.bottom, 8),
+          shadowColor: colors.accent,
+          shadowOffset: { width: 0, height: -4 },
+          shadowOpacity: 0.1,
+          shadowRadius: 8,
+          elevation: 10,
+        },
+        tabBarLabelStyle: {
+          fontSize: 11,
+          fontWeight: '600',
+          marginTop: 4,
+        },
+        headerShown: true,
+        header: () => {
+          let icon;
+          if (route.name === 'Home') icon = 'home';
+          else if (route.name === 'Tournaments') icon = 'trophy';
+          else if (route.name === 'Player Stats') icon = 'people';
+          return <CustomHeader title={route.name === 'Player Stats' ? 'Players' : route.name} icon={icon} />;
+        },
+      })}
+    >
+      <Tab.Screen 
+        name="Home" 
+        component={HomeScreen}
+      />
+      <Tab.Screen 
+        name="Tournaments" 
+        component={TournamentsScreen}
+      />
+      <Tab.Screen 
+        name="Player Stats" 
+        component={PlayerStatsScreen}
+      />
+    </Tab.Navigator>
+  );
+};
+
 export default function App() {
+  const [updateInfo, setUpdateInfo] = useState({
+    updateRequired: false,
+    currentVersion: '',
+    latestVersion: '',
+  });
+
+  useEffect(() => {
+    // Check for updates on app launch
+    const checkUpdate = async () => {
+      try {
+        const result = await checkForUpdate();
+        setUpdateInfo(result);
+      } catch (error) {
+        console.error('Error checking for update:', error);
+      }
+    };
+
+    checkUpdate();
+
+    // Re-check when app comes to foreground (user might have updated)
+    const subscription = AppState.addEventListener('change', (nextAppState) => {
+      if (nextAppState === 'active') {
+        checkUpdate();
+      }
+    });
+
+    return () => {
+      subscription.remove();
+    };
+  }, []);
+
   return (
     <SafeAreaProvider>
       <SPLProvider>
         <NavigationContainer>
           <StatusBar style="light" />
-          <Tab.Navigator
-            screenOptions={({ route }) => ({
-              tabBarIcon: ({ focused, color }) => {
-                let iconName;
-                if (route.name === 'Home') {
-                  iconName = focused ? 'home' : 'home-outline';
-                } else if (route.name === 'Tournaments') {
-                  iconName = focused ? 'trophy' : 'trophy-outline';
-                } else if (route.name === 'Player Stats') {
-                  iconName = focused ? 'people' : 'people-outline';
-                }
-                return <TabIcon focused={focused} iconName={iconName} color={color} />;
-              },
-              tabBarActiveTintColor: colors.accent,
-              tabBarInactiveTintColor: colors.textMuted,
-              tabBarStyle: {
-                backgroundColor: colors.cardBackground,
-                borderTopWidth: 1,
-                borderTopColor: colors.border,
-                paddingBottom: Platform.OS === 'ios' ? 24 : 8,
-                paddingTop: 8,
-                height: Platform.OS === 'ios' ? 85 : 70,
-                shadowColor: colors.accent,
-                shadowOffset: { width: 0, height: -4 },
-                shadowOpacity: 0.1,
-                shadowRadius: 8,
-                elevation: 10,
-              },
-              tabBarLabelStyle: {
-                fontSize: 11,
-                fontWeight: '600',
-                marginTop: 4,
-              },
-              headerShown: true,
-              header: () => {
-                let icon;
-                if (route.name === 'Home') icon = 'home';
-                else if (route.name === 'Tournaments') icon = 'trophy';
-                else if (route.name === 'Player Stats') icon = 'people';
-                return <CustomHeader title={route.name === 'Player Stats' ? 'Players' : route.name} icon={icon} />;
-              },
-            })}
-          >
-            <Tab.Screen 
-              name="Home" 
-              component={HomeScreen}
-            />
-            <Tab.Screen 
-              name="Tournaments" 
-              component={TournamentsScreen}
-            />
-            <Tab.Screen 
-              name="Player Stats" 
-              component={PlayerStatsScreen}
-            />
-          </Tab.Navigator>
+          <MainNavigator />
+          <ForceUpdateModal
+            visible={updateInfo.updateRequired}
+            currentVersion={updateInfo.currentVersion}
+            latestVersion={updateInfo.latestVersion}
+          />
         </NavigationContainer>
       </SPLProvider>
     </SafeAreaProvider>
