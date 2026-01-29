@@ -134,7 +134,7 @@ const PlayerStatsScreen = () => {
 
     const renderPlayer = ({ item, index }) => <PlayerCard player={item} index={index} />;
 
-    if (loading && !players) {
+    if (loading && !rankedPlayers) {
         return (
             <LinearGradient colors={gradients.primary} style={styles.centered}>
                 <View style={styles.loadingContainer}>
