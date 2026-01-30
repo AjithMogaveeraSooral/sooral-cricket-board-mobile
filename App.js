@@ -9,6 +9,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { SPLProvider } from './src/contexts/SPLContext';
 import HomeScreen from './src/screens/HomeScreen';
 import TournamentsScreen from './src/screens/TournamentsScreen';
+import TournamentLeaderboardScreen from './src/screens/TournamentLeaderboardScreen';
 import PlayerStatsScreen from './src/screens/PlayerStatsScreen';
 import ForceUpdateModal from './src/components/ForceUpdateModal';
 import { checkForUpdate } from './src/services/versionCheck';
@@ -66,6 +67,8 @@ const MainNavigator = () => {
             iconName = focused ? 'home' : 'home-outline';
           } else if (route.name === 'Tournaments') {
             iconName = focused ? 'trophy' : 'trophy-outline';
+          } else if (route.name === 'Leaderboard') {
+            iconName = focused ? 'podium' : 'podium-outline';
           } else if (route.name === 'Player Stats') {
             iconName = focused ? 'people' : 'people-outline';
           }
@@ -96,6 +99,7 @@ const MainNavigator = () => {
           let icon;
           if (route.name === 'Home') icon = 'home';
           else if (route.name === 'Tournaments') icon = 'trophy';
+          else if (route.name === 'Leaderboard') icon = 'podium';
           else if (route.name === 'Player Stats') icon = 'people';
           return <CustomHeader title={route.name === 'Player Stats' ? 'Players' : route.name} icon={icon} />;
         },
@@ -108,6 +112,10 @@ const MainNavigator = () => {
       <Tab.Screen 
         name="Tournaments" 
         component={TournamentsScreen}
+      />
+      <Tab.Screen 
+        name="Leaderboard" 
+        component={TournamentLeaderboardScreen}
       />
       <Tab.Screen 
         name="Player Stats" 
