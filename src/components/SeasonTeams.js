@@ -54,7 +54,7 @@ export default function SeasonTeams({ matches, rosters = {} }) {
             {expanded === name && <View>
                 <Text style={styles.players}>Owners: {roster?.owners?.join(', ') || 'Not listed'}</Text>
                 <Text style={styles.players}>{hasSquad ? 'Season squad' : 'Squad not entered. Scorecard appearances:'}</Text>
-                <Text style={styles.players}>{names.join('\n') || 'No appearances recorded.'}</Text>
+                <Text style={styles.players}>{names.map(player => player === roster?.captain ? `${player} (C)` : player).join('\n') || 'No appearances recorded.'}</Text>
             </View>}
         </View>; })}
     </View>;
