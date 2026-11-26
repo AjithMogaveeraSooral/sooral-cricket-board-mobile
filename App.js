@@ -1,5 +1,5 @@
 ﻿import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, AppState } from 'react-native';
+import { View, Text, StyleSheet, AppState, Image } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { NavigationContainer } from '@react-navigation/native';
@@ -30,9 +30,7 @@ const CustomHeader = ({ title, icon }) => {
     >
       <View style={styles.headerContent}>
         <View style={styles.headerLeft}>
-          <View style={styles.logoContainer}>
-            <Text style={styles.logoText}>SPL</Text>
-          </View>
+          <Image source={require('./assets/spl-logo.jpg')} style={styles.logoContainer} />
           <View style={styles.titleContainer}>
             <Text style={styles.headerTitle}>{title}</Text>
             <Text style={styles.headerSubtitle}>Sooral Premier League</Text>
@@ -203,11 +201,6 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.4,
     shadowRadius: 8,
     elevation: 8,
-  },
-  logoText: {
-    fontSize: 16,
-    fontWeight: '900',
-    color: colors.primaryDark,
   },
   titleContainer: {
     justifyContent: 'center',

@@ -1,5 +1,5 @@
 import React, { useMemo, useEffect, useRef } from 'react';
-import { View, Text, ScrollView, RefreshControl, StyleSheet, ActivityIndicator, Animated, Easing, Dimensions } from 'react-native';
+import { View, Text, ScrollView, RefreshControl, StyleSheet, ActivityIndicator, Animated, Easing, Dimensions, Image } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { useSPL } from '../contexts/SPLContext';
@@ -263,12 +263,7 @@ const HomeScreen = () => {
                     >
                         <View style={styles.heroContent}>
                             <View style={styles.heroLogoContainer}>
-                                <LinearGradient
-                                    colors={gradients.accent}
-                                    style={styles.heroLogo}
-                                >
-                                    <Text style={styles.heroLogoText}>SPL</Text>
-                                </LinearGradient>
+                                <Image source={require('../../assets/spl-logo.jpg')} style={styles.heroLogo} />
                             </View>
                             <Text style={styles.heroTitle}>Sooral Premier League</Text>
                             <Text style={styles.heroSubtitle}>🏏 Season 7 • 2025</Text>
@@ -402,12 +397,6 @@ const styles = StyleSheet.create({
         borderRadius: 22,
         justifyContent: 'center',
         alignItems: 'center',
-    },
-    heroLogoText: {
-        fontSize: 30,
-        fontWeight: '900',
-        color: colors.primaryDark,
-        letterSpacing: 1,
     },
     heroTitle: {
         fontSize: 26,

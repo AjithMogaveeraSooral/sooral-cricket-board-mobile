@@ -3,9 +3,10 @@ import { View, Text, ScrollView, Modal, TouchableOpacity, StyleSheet, Animated }
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import colors, { gradients } from '../constants/colors';
+import PlayerHistory from './PlayerHistory';
 
 // Batting Stats Row Component
-const BattingRow = ({ player, isHeader }) => {
+const BattingRow = ({ player, isHeader, onPlayer }) => {
     if (isHeader) {
         return (
             <View style={styles.battingHeader}>
@@ -23,7 +24,7 @@ const BattingRow = ({ player, isHeader }) => {
     return (
         <View style={styles.battingRow}>
             <View style={[styles.battingCell, styles.battingNameCell]}>
-                <Text style={[styles.playerName, isNotOut && styles.notOutName]} numberOfLines={1}>
+                <Text accessibilityRole="link" onPress={() => onPlayer(player.name)} style={[styles.playerName, styles.playerLink, isNotOut && styles.notOutName]} numberOfLines={1}>
                     {player.name}
                     {isNotOut && <Text style={styles.notOutBadge}> *</Text>}
                 </Text>
@@ -38,7 +39,7 @@ const BattingRow = ({ player, isHeader }) => {
 };
 
 // Bowling Stats Row Component
-const BowlingRow = ({ player, isHeader }) => {
+const BowlingRow = ({ player, isHeader, onPlayer }) => {
     if (isHeader) {
         return (
             <View style={styles.bowlingHeader}>
@@ -55,7 +56,7 @@ const BowlingRow = ({ player, isHeader }) => {
 
     return (
         <View style={styles.bowlingRow}>
-            <Text style={[styles.bowlingCell, styles.bowlingNameCell, styles.playerName]} numberOfLines={1}>
+            <Text accessibilityRole="link" onPress={() => onPlayer(player.name)} style={[styles.bowlingCell, styles.bowlingNameCell, styles.playerName, styles.playerLink]} numberOfLines={1}>
                 {player.name}
             </Text>
             <Text style={[styles.bowlingCell, styles.bowlingStatCell, styles.statText]}>{player.overs}</Text>
@@ -69,7 +70,7 @@ const BowlingRow = ({ player, isHeader }) => {
 };
 
 // Innings Card Component
-const InningsCard = ({ innings, inningsNumber, isWinner }) => {
+const InningsCard = ({ innings, inningsNumber, isWinner, onPlayer }) => {
     if (!innings) return null;
 
     const gradientColors = isWinner ? [colors.gold + '15', colors.gold + '08'] : gradients.card;
@@ -97,7 +98,7 @@ const InningsCard = ({ innings, inningsNumber, isWinner }) => {
                 </View>
                 <BattingRow isHeader={true} />
                 {innings.batting_stats?.map((player, index) => (
-                    <BattingRow key={index} player={player} />
+                    <BattingRow key={index} player={player} onPlayer={onPlayer} />
                 ))}
             </View>
 
@@ -109,7 +110,7 @@ const InningsCard = ({ innings, inningsNumber, isWinner }) => {
                 </View>
                 <BowlingRow isHeader={true} />
                 {innings.bowling_stats?.map((player, index) => (
-                    <BowlingRow key={index} player={player} />
+                    <BowlingRow key={index} player={player} onPlayer={onPlayer} />
                 ))}
             </View>
         </LinearGradient>
@@ -120,10 +121,12 @@ const ScorecardModal = ({ visible, match, onClose }) => {
     const slideAnim = useRef(new Animated.Value(50)).current;
     const fadeAnim = useRef(new Animated.Value(0)).current;
     const [activeTab, setActiveTab] = useState('summary');
+    const [selectedPlayer, setSelectedPlayer] = useState(null);
 
     useEffect(() => {
         if (visible && match) {
             setActiveTab('summary');
+            setSelectedPlayer(null);
             slideAnim.setValue(50);
             fadeAnim.setValue(0);
             Animated.parallel([
@@ -159,9 +162,9 @@ const ScorecardModal = ({ visible, match, onClose }) => {
             visible={!!visible && !!match}
             animationType="slide"
             transparent={false}
-            onRequestClose={onClose}
+            onRequestClose={selectedPlayer ? () => setSelectedPlayer(null) : onClose}
         >
-            <LinearGradient colors={gradients.primary} style={styles.container}>
+            <LinearGradient colors={gradients.primary} style={[styles.container, selectedPlayer && { display: 'none' }]}>
                 {/* Header */}
                 <LinearGradient colors={gradients.header} style={styles.header}>
                     <View style={styles.headerLeft}>
@@ -346,6 +349,7 @@ const ScorecardModal = ({ visible, match, onClose }) => {
                                     <InningsCard 
                                         innings={detailedScorecard.innings1} 
                                         inningsNumber={1}
+                                        onPlayer={setSelectedPlayer}
                                         isWinner={innings1IsWinner}
                                     />
                                 )}
@@ -353,6 +357,7 @@ const ScorecardModal = ({ visible, match, onClose }) => {
                                     <InningsCard 
                                         innings={detailedScorecard.innings2} 
                                         inningsNumber={2}
+                                        onPlayer={setSelectedPlayer}
                                         isWinner={innings2IsWinner}
                                     />
                                 )}
@@ -374,11 +379,13 @@ const ScorecardModal = ({ visible, match, onClose }) => {
                     <View style={styles.bottomPadding} />
                 </ScrollView>
             </LinearGradient>
+            {selectedPlayer && <PlayerHistory name={selectedPlayer} onBack={() => setSelectedPlayer(null)} />}
         </Modal>
     );
 };
 
 const styles = StyleSheet.create({
+    playerLink: { textDecorationLine: 'underline', color: colors.accent },
     container: {
         flex: 1,
     },

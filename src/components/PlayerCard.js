@@ -1,5 +1,6 @@
-import React, { useRef, useEffect } from 'react';
-import { View, Text, Image, StyleSheet, Animated, Easing } from 'react-native';
+import React, { useRef, useEffect, useState } from 'react';
+import { View, Text, Image, StyleSheet, Animated, Easing, Modal, Pressable } from 'react-native';
+import PlayerHistory from './PlayerHistory';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { safeDisplay, parseBestSpell } from '../utils/calculations';
@@ -93,6 +94,7 @@ const StatSection = ({ title, icon, children, gradient, accentColor }) => (
 );
 
 const PlayerCard = ({ player, index = 0 }) => {
+    const [historyOpen, setHistoryOpen] = useState(false);
     const imageUrl = getImageUrl(player.profile_image_url);
     const fadeAnim = useRef(new Animated.Value(0)).current;
     const slideAnim = useRef(new Animated.Value(40)).current;
@@ -276,6 +278,13 @@ const PlayerCard = ({ player, index = 0 }) => {
                 </View>
 
                 {/* Points Footer */}
+                <Pressable accessibilityRole="button" onPress={() => setHistoryOpen(true)} style={{ flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 12 }}>
+                    <Ionicons name="time-outline" size={18} color={colors.accent} />
+                    <Text style={{ color: colors.accent }}>Match history</Text>
+                </Pressable>
+                {historyOpen && <Modal visible animationType="slide" onRequestClose={() => setHistoryOpen(false)}>
+                    <PlayerHistory name={player.name} onBack={() => setHistoryOpen(false)} />
+                </Modal>}
                 <View style={styles.pointsContainer}>
                     <LinearGradient
                         colors={[colors.gold + '20', colors.gold + '08']}

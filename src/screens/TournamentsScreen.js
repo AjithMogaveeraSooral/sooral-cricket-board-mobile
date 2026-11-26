@@ -13,6 +13,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { useSPL } from '../contexts/SPLContext';
 import MatchCard from '../components/MatchCard';
+import SeasonTeams from '../components/SeasonTeams';
 import ScorecardModal from '../components/ScorecardModal';
 import colors, { gradients } from '../constants/colors';
 
@@ -326,6 +327,7 @@ const TournamentsScreen = () => {
                 )}
 
                 {/* Match Count Badge */}
+                <SeasonTeams key={selectedTournament} matches={matches} />
                 <View style={styles.matchCountContainer}>
                     <LinearGradient
                         colors={gradients.card}

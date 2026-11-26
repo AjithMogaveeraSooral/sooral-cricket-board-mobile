@@ -3,6 +3,7 @@ import { View, Text, TouchableOpacity, StyleSheet, Animated, Easing } from 'reac
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import colors, { gradients } from '../constants/colors';
+import { TeamBadge } from './SeasonTeams';
 
 const MatchCard = ({ match, onPress, delay = 0 }) => {
     const fadeAnim = useRef(new Animated.Value(0)).current;
@@ -68,6 +69,7 @@ const MatchCard = ({ match, onPress, delay = 0 }) => {
                     <View style={styles.teamsContainer}>
                         <View style={[styles.teamRow, isTeam1Winner && styles.winnerRow]}>
                             <View style={styles.teamNameContainer}>
+                                <TeamBadge name={team1Name} />
                                 {isTeam1Winner && (
                                     <Ionicons name="trophy" size={14} color={colors.gold} style={styles.winnerIcon} />
                                 )}
@@ -85,6 +87,7 @@ const MatchCard = ({ match, onPress, delay = 0 }) => {
 
                         <View style={[styles.teamRow, isTeam2Winner && styles.winnerRow]}>
                             <View style={styles.teamNameContainer}>
+                                <TeamBadge name={team2Name} />
                                 {isTeam2Winner && (
                                     <Ionicons name="trophy" size={14} color={colors.gold} style={styles.winnerIcon} />
                                 )}
