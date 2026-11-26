@@ -22,7 +22,7 @@
       },
       "edgeToEdgeEnabled": true,
       "package": "com.ajithms98.sooralcricketboardmobile",
-      "versionCode": 6
+      "versionCode": 7
     },
     "web": {
       "favicon": "./assets/favicon.png"
