@@ -7,12 +7,12 @@ const Language = createContext(null);
 const key = 'spl-language';
 
 export function LanguageProvider({ children }) {
-    const [language, setLanguage] = useState('en');
+    const [language, setLanguage] = useState('kn');
     const changed = useRef(false);
     useEffect(() => {
         let mounted = true;
         AsyncStorage.getItem(key).then(value => {
-            if (mounted && !changed.current && value === 'kn') setLanguage(value);
+            if (mounted && !changed.current && value === 'en') setLanguage(value);
         }).catch(() => {});
         return () => { mounted = false; };
     }, []);
