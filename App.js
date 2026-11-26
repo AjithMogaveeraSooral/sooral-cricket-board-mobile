@@ -1,5 +1,6 @@
 ﻿import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, AppState, Image } from 'react-native';
+import { View, Pressable, StyleSheet, AppState, Image } from 'react-native';
+import { LanguageProvider, Text, useLanguage } from './src/contexts/Language';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { NavigationContainer } from '@react-navigation/native';
@@ -20,6 +21,7 @@ const Tab = createBottomTabNavigator();
 // Custom header component with safe area support
 const CustomHeader = ({ title, icon }) => {
   const insets = useSafeAreaInsets();
+  const { language, switchLanguage } = useLanguage();
   
   return (
     <LinearGradient
@@ -36,9 +38,10 @@ const CustomHeader = ({ title, icon }) => {
             <Text style={styles.headerSubtitle}>Sooral Premier League</Text>
           </View>
         </View>
-        <View style={styles.headerIconContainer}>
-          <Ionicons name={icon} size={24} color={colors.accent} />
-        </View>
+        <Pressable accessibilityRole="button" accessibilityLabel={language === 'en' ? 'Switch to Kannada' : 'ಇಂಗ್ಲಿಷ್‌ಗೆ ಬದಲಿಸಿ'} onPress={switchLanguage} style={{ flexDirection: 'row', alignItems: 'center', gap: 6, padding: 8 }}>
+          <Ionicons name="language-outline" size={18} color={colors.accent} />
+          <Text style={{ color: colors.accent }}>{language === 'en' ? 'ಕನ್ನಡ' : 'English'}</Text>
+        </Pressable>
       </View>
     </LinearGradient>
   );
@@ -55,10 +58,12 @@ const TabIcon = ({ focused, iconName, color }) => (
 // Main navigator component that uses safe area insets for bottom tabs
 const MainNavigator = () => {
   const insets = useSafeAreaInsets();
+  const { translate } = useLanguage();
   
   return (
     <Tab.Navigator
       screenOptions={({ route }) => ({
+        tabBarLabel: translate(route.name),
         tabBarIcon: ({ focused, color }) => {
           let iconName;
           if (route.name === 'Home') {
@@ -157,7 +162,7 @@ export default function App() {
 
   return (
     <SafeAreaProvider>
-      <SPLProvider>
+      <LanguageProvider><SPLProvider>
         <NavigationContainer>
           <StatusBar style="light" />
           <MainNavigator />
@@ -167,7 +172,7 @@ export default function App() {
             latestVersion={updateInfo.latestVersion}
           />
         </NavigationContainer>
-      </SPLProvider>
+      </SPLProvider></LanguageProvider>
     </SafeAreaProvider>
   );
 }
@@ -185,6 +190,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   headerLeft: {
+    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
   },
@@ -203,6 +209,7 @@ const styles = StyleSheet.create({
     elevation: 8,
   },
   titleContainer: {
+    flexShrink: 1,
     justifyContent: 'center',
   },
   headerTitle: {

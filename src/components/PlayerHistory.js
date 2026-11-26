@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { View, Text, ScrollView, Pressable, StyleSheet } from 'react-native';
+import { View, ScrollView, Pressable, StyleSheet } from 'react-native';
+import { Text } from "../contexts/Language";
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useSPL } from '../contexts/SPLContext';

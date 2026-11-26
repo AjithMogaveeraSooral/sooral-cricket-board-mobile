@@ -1,5 +1,6 @@
 import React, { useEffect, useRef } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Animated, Easing } from 'react-native';
+import { View, TouchableOpacity, StyleSheet, Animated, Easing } from 'react-native';
+import { Text } from "../contexts/Language";
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import colors, { gradients } from '../constants/colors';

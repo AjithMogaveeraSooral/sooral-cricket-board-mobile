@@ -1,7 +1,6 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { 
     View, 
-    Text, 
     ScrollView, 
     RefreshControl, 
     StyleSheet, 
@@ -9,6 +8,7 @@ import {
     TouchableOpacity,
     Animated
 } from 'react-native';
+import { Text } from "../contexts/Language";
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { useSPL } from '../contexts/SPLContext';
@@ -81,11 +81,8 @@ const TournamentsScreen = () => {
         }
     }, [tournamentNames, selectedTournament]);
 
-    const matches = useMemo(() => {
-        if (!tournaments || !selectedTournament) return [];
-        const tournament = tournaments.find(t => t.name === selectedTournament);
-        return tournament?.matches || [];
-    }, [tournaments, selectedTournament]);
+    const tournament = tournaments?.find(item => item.name === selectedTournament);
+    const matches = useMemo(() => tournament?.matches || [], [tournament]);
 
     // Calculate season statistics
     const seasonStats = useMemo(() => {
@@ -327,7 +324,7 @@ const TournamentsScreen = () => {
                 )}
 
                 {/* Match Count Badge */}
-                <SeasonTeams key={selectedTournament} matches={matches} />
+                <SeasonTeams key={selectedTournament} matches={matches} rosters={tournament?.team_rosters} />
                 <View style={styles.matchCountContainer}>
                     <LinearGradient
                         colors={gradients.card}

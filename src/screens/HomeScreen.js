@@ -1,5 +1,6 @@
 import React, { useMemo, useEffect, useRef } from 'react';
-import { View, Text, ScrollView, RefreshControl, StyleSheet, ActivityIndicator, Animated, Easing, Dimensions, Image } from 'react-native';
+import { View, ScrollView, RefreshControl, StyleSheet, ActivityIndicator, Animated, Easing, Dimensions, Image } from 'react-native';
+import { Text } from "../contexts/Language";
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { useSPL } from '../contexts/SPLContext';

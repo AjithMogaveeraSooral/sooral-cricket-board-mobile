@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { View, Text, Image, Pressable, StyleSheet } from 'react-native';
+import { View, Image, Pressable, StyleSheet } from 'react-native';
+import { Text } from "../contexts/Language";
 import { Ionicons } from '@expo/vector-icons';
 import colors from '../constants/colors';
 import { playerKey } from '../utils/playerHistory';
@@ -16,8 +17,8 @@ export function TeamBadge({ name }) {
     return source ? <Image source={source} resizeMode="contain" style={styles.badge} /> : null;
 }
 
-function seasonTeams(matches) {
-    const teams = new Map();
+function seasonTeams(matches, rosters) {
+    const teams = new Map(Object.keys(rosters).map(name => [name, new Map()]));
     for (const match of matches) {
         const sides = match.teams || [];
         for (const side of sides) if (!teams.has(side)) teams.set(side, new Map());
@@ -35,19 +36,27 @@ function seasonTeams(matches) {
     return Array.from(teams, ([name, players]) => ({ name, players: [...players.values()].sort((left, right) => left.localeCompare(right)) })).sort((left, right) => left.name.localeCompare(right.name));
 }
 
-export default function SeasonTeams({ matches }) {
+export default function SeasonTeams({ matches, rosters = {} }) {
     const [expanded, setExpanded] = useState(null);
-    if (!matches.length) return null;
+    const teams = seasonTeams(matches, rosters);
+    if (!teams.length) return null;
     return <View style={styles.section}>
         <Text style={styles.title}>Teams</Text>
-        <Text style={styles.note}>Players recorded in this season's batting and bowling scorecards.</Text>
-        {seasonTeams(matches).map(({ name, players }) => <View key={name}>
+        {teams.map(({ name, players }) => {
+            const roster = rosters[name];
+            const hasSquad = roster?.squad?.length > 0;
+            const names = hasSquad ? roster.squad : players;
+            return <View key={name}>
             <Pressable style={styles.row} accessibilityRole="button" accessibilityState={{ expanded: expanded === name }} onPress={() => setExpanded(expanded === name ? null : name)}>
-                <TeamBadge name={name} /><Text style={styles.team}>{name} ({players.length})</Text>
+                <TeamBadge name={name} /><Text style={styles.team}>{name} ({names.length})</Text>
                 <Ionicons name={expanded === name ? 'chevron-up' : 'chevron-down'} size={18} color={colors.accent} />
             </Pressable>
-            {expanded === name && <Text style={styles.players}>{players.join('\n') || 'No player entries recorded.'}</Text>}
-        </View>)}
+            {expanded === name && <View>
+                <Text style={styles.players}>Owners: {roster?.owners?.join(', ') || 'Not listed'}</Text>
+                <Text style={styles.players}>{hasSquad ? 'Season squad' : 'Squad not entered. Scorecard appearances:'}</Text>
+                <Text style={styles.players}>{names.join('\n') || 'No appearances recorded.'}</Text>
+            </View>}
+        </View>; })}
     </View>;
 }
 

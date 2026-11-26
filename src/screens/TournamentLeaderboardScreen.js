@@ -1,7 +1,6 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { 
     View, 
-    Text, 
     ScrollView, 
     RefreshControl, 
     StyleSheet, 
@@ -10,6 +9,7 @@ import {
     Animated,
     Image
 } from 'react-native';
+import { Text } from "../contexts/Language";
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { useSPL } from '../contexts/SPLContext';

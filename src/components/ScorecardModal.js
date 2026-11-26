@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { View, Text, ScrollView, Modal, TouchableOpacity, StyleSheet, Animated } from 'react-native';
+import { View, ScrollView, Modal, TouchableOpacity, StyleSheet, Animated } from 'react-native';
+import { Text } from "../contexts/Language";
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import colors, { gradients } from '../constants/colors';
@@ -374,6 +375,15 @@ const ScorecardModal = ({ visible, match, onClose }) => {
                                 </LinearGradient>
                             </>
                         )}
+                        <View style={styles.statsSection}>
+                            <Text style={styles.sectionTitle}>Playing XI</Text>
+                            {teams.map(name => <View key={name} style={styles.statsSection}>
+                                <Text style={styles.sectionTitle}>{name}</Text>
+                                {match?.playing_xi?.[name]?.length ? match.playing_xi[name].map(player =>
+                                    <Text key={player} accessibilityRole="link" style={[styles.playerName, styles.playerLink]} onPress={() => setSelectedPlayer(player)}>{player}</Text>
+                                ) : <Text style={styles.playerName}>Lineup not entered.</Text>}
+                            </View>)}
+                        </View>
                     </Animated.View>
 
                     <View style={styles.bottomPadding} />

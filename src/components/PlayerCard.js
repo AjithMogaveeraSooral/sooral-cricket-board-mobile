@@ -1,5 +1,6 @@
 import React, { useRef, useEffect, useState } from 'react';
-import { View, Text, Image, StyleSheet, Animated, Easing, Modal, Pressable } from 'react-native';
+import { View, Image, StyleSheet, Animated, Easing, Modal, Pressable } from 'react-native';
+import { Text } from "../contexts/Language";
 import PlayerHistory from './PlayerHistory';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';

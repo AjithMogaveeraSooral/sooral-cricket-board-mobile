@@ -1,7 +1,6 @@
 import React from 'react';
 import {
   View,
-  Text,
   StyleSheet,
   Modal,
   TouchableOpacity,
@@ -9,6 +8,7 @@ import {
   Platform,
   Image,
 } from 'react-native';
+import { Text } from "../contexts/Language";
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import colors, { gradients } from '../constants/colors';

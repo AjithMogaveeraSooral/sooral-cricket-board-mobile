@@ -1,8 +1,6 @@
 import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { 
     View, 
-    Text, 
-    TextInput, 
     FlatList, 
     RefreshControl, 
     StyleSheet, 
@@ -10,6 +8,7 @@ import {
     TouchableOpacity,
     Animated
 } from 'react-native';
+import { Text, TextInput } from "../contexts/Language";
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { useSPL } from '../contexts/SPLContext';
